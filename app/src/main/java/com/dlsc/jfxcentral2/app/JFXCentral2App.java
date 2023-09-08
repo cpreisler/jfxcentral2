@@ -92,7 +92,7 @@ public class JFXCentral2App extends Application {
             Locale.setDefault(Locale.US);
         }
     }
-
+    
     @Override
     public void start(Stage stage) {
         // This is a workaround to prevent a deadlock between the TrayIcon and the JPro ImageManager
@@ -128,7 +128,7 @@ public class JFXCentral2App extends Application {
         routeNode.start(sessionManager);
 
         // tray icon
-        if (!WebAPI.isBrowser()) {
+        if (!WebAPI.isBrowser() && SystemTray.isSupported()) {
             RepositoryManager.repositoryUpdatedProperty().addListener(it -> {
                 if (trayIconManager == null) {
                     trayIconManager = new TrayIconManager(stage, sessionManager);
@@ -141,7 +141,9 @@ public class JFXCentral2App extends Application {
         // customs stage for decorations / the chrome
         CustomStage customStage = new CustomStage(stage, routeNode, sessionManager);
         customStage.setCloseHandler(() -> {
-            trayIconManager.hide();
+            if (SystemTray.isSupported()) {
+                trayIconManager.hide();
+            }
             stage.close();
         });
 
