@@ -156,7 +156,8 @@ public class JFXCentral2App extends Application {
         updateSizeProperty(scene);
 
         stage.setScene(scene);
-
+        stage.setFullScreenExitHint("");
+        
         // do not store stage width, height, location when we are running in a browser
         if (!WebAPI.isBrowser()) {
             StageManager.install(stage, "com/dlsc/jfxcentral2", 500, 800);

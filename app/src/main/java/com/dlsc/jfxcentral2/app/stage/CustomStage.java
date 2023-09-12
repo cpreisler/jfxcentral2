@@ -6,12 +6,10 @@ import com.dlsc.jfxcentral2.utils.IkonUtil;
 import com.jpro.webapi.WebAPI;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -23,7 +21,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import one.jpro.routing.sessionmanager.SessionManager;
@@ -51,7 +48,7 @@ public class CustomStage extends BorderPane {
         RESIZE_SW,
         RESIZE_SE
     }
-
+    
     public CustomStage(Stage stage, Node node, SessionManager sessionManager) {
         setContent(node);
         node.getStyleClass().add("stage-content");
@@ -63,8 +60,11 @@ public class CustomStage extends BorderPane {
 
         TitleBar titleBar = new TitleBar(sessionManager);
         titleBar.getLabel().setText("JFXCentral");
-
+        
         if (!WebAPI.isBrowser()) {
+            stage.fullScreenProperty().addListener((it -> {
+                titleBar.setMaxButtonSelected(stage.isFullScreen());
+            }));            
             VBox vBox = new VBox(titleBar);
             vBox.setPadding(new Insets(0, 0, 2, 0));
             vBox.setAlignment(Pos.CENTER_RIGHT);
@@ -263,7 +263,7 @@ public class CustomStage extends BorderPane {
 
         updateStyleBasedOnStageFocus(stage);
     }
-
+    
     private final ObjectProperty<Runnable> closeHandler = new SimpleObjectProperty<>(this, "closeHandler");
 
     public Runnable getCloseHandler() {
@@ -305,15 +305,12 @@ public class CustomStage extends BorderPane {
     public void setContent(Node content) {
         this.content.set(content);
     }
-
+    
     class TitleBar extends StackPane {
 
         private final Label label;
 
-        private double lastX;
-        private double lastY;
-        private double lastWidth;
-        private double lastHeight;
+        private final ToggleButton maxButton;
 
         TitleBar(SessionManager sessionManager) {
             getStyleClass().add("title-bar");
@@ -326,40 +323,14 @@ public class CustomStage extends BorderPane {
             FontIcon minIcon = new FontIcon(MaterialDesign.MDI_WINDOW_MINIMIZE);
             FontIcon closeIcon = new FontIcon(IkonUtil.close);
 
-            ToggleButton maxButton = new ToggleButton();
+            maxButton = new ToggleButton();
             maxButton.getStyleClass().addAll("control-button", "max-button");
             maxButton.setGraphic(maxIcon);
             maxButton.setFocusTraversable(false);
             maxButton.selectedProperty().addListener(it -> maxButton.setGraphic(maxButton.isSelected() ? restoreIcon : maxIcon));
             maxButton.setOnAction(evt -> {
                 Stage stage = (Stage) getScene().getWindow();
-
-                if (maxButton.isSelected()) {
-
-                    lastX = stage.getX();
-                    lastY = stage.getY();
-                    lastWidth = stage.getWidth();
-                    lastHeight = stage.getHeight();
-
-                    stage.setFullScreenExitHint("");
-                    stage.setFullScreen(true);
-
-                    // Get current screen of the stage
-                    ObservableList<Screen> screens = Screen.getScreensForRectangle(new Rectangle2D(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight()));
-
-                    // Change stage properties
-                    Rectangle2D bounds = screens.get(0).getBounds();
-                    stage.setX(bounds.getMinX());
-                    stage.setY(bounds.getMinY());
-                    stage.setWidth(bounds.getWidth());
-                    stage.setHeight(bounds.getHeight());
-                } else {
-                    stage.setX(lastX);
-                    stage.setY(lastY);
-                    stage.setWidth(lastWidth);
-                    stage.setHeight(lastHeight);
-                    stage.setFullScreen(false);
-                }
+                stage.setFullScreen(maxButton.isSelected());
             });
 
             setOnMouseClicked(evt -> {
@@ -404,6 +375,10 @@ public class CustomStage extends BorderPane {
 
         public Label getLabel() {
             return label;
+        }
+        
+        public void setMaxButtonSelected(boolean selected) {
+            maxButton.setSelected(selected);
         }
     }
 }

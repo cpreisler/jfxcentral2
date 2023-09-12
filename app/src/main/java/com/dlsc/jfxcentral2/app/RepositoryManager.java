@@ -38,7 +38,7 @@ public class RepositoryManager {
         if (!isRepositoryUpdated()) {
             try {
                 initialLoad(monitor);
-                Platform.runLater(() -> repositoryUpdated.set(true));
+                repositoryUpdated.set(true);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -52,8 +52,10 @@ public class RepositoryManager {
     private static void initialLoad(ProgressMonitor monitor) throws Exception {
         // Network not available, skip the initial load
         if (!isNetworkAvailable()) {
-            monitor.beginTask("Network not available.", 1);
-            monitor.endTask();
+            Platform.runLater(() -> {
+                monitor.beginTask("Network not available.", 1);
+                monitor.endTask();                
+            });
             return;
         }
 
@@ -62,9 +64,11 @@ public class RepositoryManager {
             String repoUrl = GITHUB_REPOSITORY_URL;
 
             if (isCountryEqualToChina()) {
-                monitor.beginTask("Checking network...", 1);
                 repoUrl = shouldUseGiteeMirror() ? GITEE_REPOSITORY_URL : GITHUB_REPOSITORY_URL;
-                monitor.endTask();
+                Platform.runLater(() -> {
+                    monitor.beginTask("Checking network...", 1);
+                    monitor.endTask();
+                });
             }
 
             CloneCommand cloneCmd = Git.cloneRepository()
